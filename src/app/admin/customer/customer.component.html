@@ -1,0 +1,278 @@
+<div class="d-flex align-items-stretch w-100 h-100" style="overflow-y:auto;">
+  <div class="col-3 py-2" style="border-right: 1px solid #ababab">
+    <div class="row justify-content-around align-items-center" flex-no-shrink>
+      <h5>Danh sách khách hàng</h5>
+      <button class="btn btn-sm btn-primary" (click)="open(create)">+</button>
+    </div>
+    <div class="b-r p-3 w-100" flex-no-shrink>
+      <div class="form-group">
+        <input type="text" placeholder="Tìm kiếm theo tên" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Tìm kiếm theo tên'"
+          [formControl]="itemControl" #input>
+      </div>
+    </div>
+    <div style="overflow-y:auto;height:450px;width:300px;">
+      <table class="table table-sm">
+        <ng-template let-element ngFor [ngForOf]="customers | customerSort" let-i="index">
+          <tr class="nav-item custom align-items-center">
+            <td class="col-6" style="white-space: nowrap; word-break:break-all;">
+              <a href="javascript:void()" (click)=select(element) class="nav-link">{{element.Name}}</a>
+            </td>
+          </tr>
+        </ng-template>
+      </table>
+    </div>
+  </div>
+  <div class="col-3 py-2" style="border-right: 1px solid #ababab">
+    <h5> Khách hàng </h5>
+    <div *ngIf="customer != null">
+      <ngb-accordion #acc="ngbAccordion" [closeOthers]="true" activeIds="config-panel-one" style="height:100vh;">
+        <ngb-panel title="Thông tin khách hàng" id="config-panel-one">
+          <ng-template ngbPanelContent>
+            <ul>
+              <li>Tên KH: {{customer.Name}} </li>
+              <li>Mã khách hàng: {{customer.Code}} </li>
+              <li>Địa chỉ: {{customer.Address}} </li>
+              <li>Team: {{customer.Team}} </li>
+              <li>Phiên bản: {{customer.Version}}</li>
+              <li>Phiên bản SQL: {{customer.SqlVersion}}</li>
+              <li>Ghi chú: {{customer.Info}}</li>
+            </ul>
+            <div class="footer" *ngIf="!(topics && topics.length) ">
+              <button class="btn btn-sm btn-primary" (click)="open(create,customer)"> Sửa</button>
+              <button class="btn btn-sm btn-danger" (click)="delete(customer, confirm)"> Xóa</button>
+            </div>
+          </ng-template>
+        </ngb-panel>
+        <ngb-panel title="Nội dung">
+          <ng-template ngbPanelContent>
+            <a class="btn-outline-danger mb-2" href="javascript:void()" (click)="createNew(topic)"> Nội dung mới </a>
+            <div *ngIf="topics">
+              <!-- <li *ngFor="let t of topics" class="nav-link">
+                <a href="javascript:void()" (click)="selectTopic(t)"> {{t.Name}}</a>
+                <a href="javascript:void()" (click)="createRequest(request,t)"> Yêu cầu mới </a>
+              </li> -->
+              <table class="table table-sm">
+                <ng-template let-element ngFor [ngForOf]="topics" let-i="index">
+                  <tr class="nav-item custom align-items-center">
+                    <td class="col-6" style="white-space: nowrap; word-break:break-all;">
+                      <a href="javascript:void()" (click)=selectTopic(element) class="nav-link">{{element.Name}}</a>
+                    </td>
+                  </tr>
+                </ng-template>
+              </table>
+            </div>
+          </ng-template>
+        </ngb-panel>
+      </ngb-accordion>
+    </div>
+  </div>
+  <div class="col-6 py-2 px-3">
+    <div class="row justify-content-between align-items-center" flex-no-shrink>
+      <h5 class="px-2">Các yêu cầu</h5>
+      <a class="pr-3" href="javascript:void()" *ngIf="selected" (click)="createRequest(request, selectedTopic.Id)">Yêu cầu mới</a>
+    </div>
+    <div *ngIf="selected">
+      <dx-data-grid id="gridContainer" [dataSource]="requests" [columnAutoWidth]="true">
+        <dxo-paging [enabled]="true"></dxo-paging>
+        <dxi-column dataField="Code" cellTemplate="cellTemplate" width="70px"></dxi-column>
+        <dxi-column dataField="State" caption="Trạng thái">
+          <dxo-lookup [dataSource]="states" displayExpr="value" valueExpr="id">
+          </dxo-lookup>
+        </dxi-column>
+        <dxi-column dataField="DateCreated" caption="Ngày tạo yêu cầu"></dxi-column>
+        <dxi-column dataField="FromEmployeeId" caption="Nv yêu cầu">
+          <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+          </dxo-lookup>
+        </dxi-column>
+        <dxi-column dataField="ToEmployeeId" caption="Nv nhận">
+          <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+          </dxo-lookup>
+        </dxi-column>
+        <dxi-column dataField="DoEmployeeId" caption="Nv thực hiện">
+          <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+          </dxo-lookup>
+        </dxi-column>
+        <dxi-column dataField="DesignDateExpired" caption="Hết hạn thiết kế"></dxi-column>
+        <dxi-column dataField="CodeDateExpired" caption="Hết hạn lập trình"></dxi-column>
+        <dxi-column dataField="Description" caption="Mô tả công việc"></dxi-column>
+        <dxi-column dataField="DevDescription" caption="Phân tích lập trình"></dxi-column>
+        <dxi-column dataField="DescriptionFileId" caption="File mô tả">
+          <dxo-lookup [dataSource]="files" displayExpr="FilePath" valueExpr="Id">
+          </dxo-lookup>
+        </dxi-column>
+        <div *dxTemplate=" let data of 'cellTemplate'">
+          <a (click)="selectRequest(data.value, request)">{{data.value}}</a>
+        </div>
+      </dx-data-grid>
+    </div>
+  </div>
+</div>
+
+<ng-template #confirm let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <p> Xóa khách hàng này ?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="c('Yes')">Yes</button>
+    <button type="button" class="btn btn-warning" (click)="d('No')">No </button>
+  </div>
+</ng-template>
+
+<ng-template #create let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <form [formGroup]="customerForm">
+      <fieldset class="form-block">
+        <div class="form-group form-group-sm">
+          <label class="control-label">Tên khách hàng</label>
+          <input class="form-control" type="text" formControlName="Name">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Địa chỉ</label>
+          <input class="form-control" type="text" formControlName="Address">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Team</label>
+          <input class="form-control" type="text" formControlName="Team">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Phiên bản</label>
+          <input class="form-control" type="text" formControlName="Version">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Phiên bản SQL</label>
+          <input class="form-control" type="text" formControlName="SqlVersion">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Ghi chú</label>
+          <textarea class="form-control" type="text" formControlName="Info"> </textarea>
+        </div>
+        <button class="btn btn-primary" type="button" (click)="send()"> Send</button>
+        <button class="btn btn-outline-primary" (click)="d('')"> Close </button>
+      </fieldset>
+    </form>
+  </div>
+</ng-template>
+
+<ng-template #topic let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <form [formGroup]="topicForm">
+      <div class="form-body">
+        <div class="form-group form-group-sm">
+          <label class="control-label">CustomerId</label>
+          <input class="form-control" type="text" formControlName="CustomerId" readonly="readonly">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Name</label>
+          <input class="form-control" type="text" formControlName="Name">
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" (click)="addTopic()"> Create </button>
+    <button class="btn btn-outline-primary" type="button" (click)="d('close')"> Close </button>
+  </div>
+</ng-template>
+
+
+<ng-template #request let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <form [formGroup]="requestForm">
+      <div class="form-body">
+        <div *ngIf="editMode" class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Mã yêu cầu</label>
+          <div class="col-md-8">
+            <input class="form-control" type="text" formControlName="Code">
+          </div>
+        </div>
+
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Chủ đề</label>
+          <div class="col-md-8">
+            <input class="form-control" type="text" formControlName="TopicId" readonly="readonly">
+          </div>
+        </div>
+        <div *ngIf="editMode" class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Ngày tạo yêu cầu</label>
+          <div class="col-md-8">
+            <input class="form-control" type="datetime" formControlName="DateCreated">
+          </div>
+        </div>
+        <div class="form-group  row align-items-center  form-group-sm">
+          <label class="col-md-4 control-label">Thời hạn thiết kế (yyyy-mm-dd) *</label>
+          <div class="col-md-8">
+            <input class="form-control" formControlName="DesignDateExpired">
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class=" col-md-4 control-label">Thời hạn lập trình (yyyy-mm-dd) *</label>
+          <div class="col-md-8">
+            <input class="form-control" formControlName="CodeDateExpired">
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Người giao yêu cầu *</label>
+          <div class="col-md-8">
+            <select class="form-control" formControlName="FromEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Người nhận yêu cầu *</label>
+          <div class="col-md-8">
+            <select class="form-control" formControlName="ToEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Người thực hiện yêu cầu</label>
+          <div class="col-md-8">
+            <select class="form-control" formControlName="DoEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Mô tả yêu cầu</label>
+          <div class="col-md-8">
+            <textarea class="form-control" formControlName="Description"> </textarea>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Mô tả lập trình</label>
+          <div class="col-md-8">
+            <textarea class="form-control" formControlName="DevDescription"> </textarea>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4  control-label">File mô tả</label>
+          <div class="col-md-6">
+            <input style="width: 250px" type="file" ng2FileSelect [uploader]="uploader" required placeholder="Chọn file">
+          </div>
+          <div class="col-md-1 pull-right">
+            <button class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="Upload" (click)="uploadFile()">+</button>
+          </div>
+        </div>
+        <div class="form-group row align-items-center form-group-sm">
+          <label class="col-md-4 control-label">Trạng thái</label>
+          <div class="col-md-8">
+            <select class="form-control" formControlName="State">
+            <option [value]="0" selected> Chờ phân tích </option>
+            <option [value]="1"> Chờ phân công</option>
+            <option [value]="2"> Chờ xử lý </option>
+            <option [value]="3"> Chờ kiểm tra </option>
+            <option [value]="4"> Hoàn thành</option>
+          </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" *ngIf="!isCompleted" (click)="sendRequest()"> Send</button>
+        <button class="btn btn-outline-primary " type="button" (click)="d('close')"> Close </button>
+      </div>
+    </form>
+  </div>
+</ng-template>

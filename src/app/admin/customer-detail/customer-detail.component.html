@@ -1,0 +1,161 @@
+<div class="container p-3 w-100">
+  <div class="col d-flex justify-content-center">
+    <div class="card p-2 " style="border:1px solid #cecece;width:100%">
+      <div *ngIf="customer">
+        <h3 class="card-title"> Thông tin khách hàng </h3>
+        <ul>
+          <li>Tên khách hàng: {{customer.Name}} </li>
+          <li>Địa chỉ: {{customer.Address}} </li>
+          <li>Phiên bản: {{customer.Version}}</li>
+          <li>Ghi chú: {{customer.Info}}</li>
+          <li>Mã khách hàng: {{customer.Code}} </li>
+          <li>Team: {{customer.Team}} </li>
+          <li>Phiên bản SQL: {{customer.SqlVersion}}</li>
+        </ul>
+      </div>
+
+
+      <h3> Chủ đề </h3>
+      <a href="javascript:void()" (click)="create(topic)"> Chủ đề mới </a>
+
+      <div *ngIf="topics">
+        <li *ngFor="let t of topics" class="nav-link">
+          <a href="javascript:void()" (click)="selectTopic(t)"> {{t.Name}}</a>
+          <a href="javascript:void()" (click)="createRequest(request,t)"> Yêu cầu mới </a>
+        </li>
+      </div>
+      <div *ngIf="selected">
+        <dx-data-grid id="gridContainer" [dataSource]="requests">
+          <dxo-paging [enabled]="true"></dxo-paging>
+          <dxi-column dataField="Code" cellTemplate="cellTemplate" width="70px"></dxi-column>
+
+          <dxi-column dataField="DateCreated" caption="Ngày tạo yêu cầu"></dxi-column>
+          <dxi-column dataField="FromEmployeeId" caption="Nv yêu cầu">
+            <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+            </dxo-lookup>
+          </dxi-column>
+          <dxi-column dataField="ToEmployeeId" caption="Nv nhận">
+            <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+            </dxo-lookup>
+          </dxi-column>
+          <dxi-column dataField="DoEmployeeId" caption="Nv thực hiện">
+            <dxo-lookup [dataSource]="employees" displayExpr="ShortName" valueExpr="Id">
+            </dxo-lookup>
+          </dxi-column>
+          <dxi-column dataField="DesignDateExpired" caption="Hết hạn thiết kế"></dxi-column>
+          <dxi-column dataField="CodeDateExpired" caption="Hết hạn lập trình"></dxi-column>
+          <dxi-column dataField="Description" caption="Mô tả công việc"></dxi-column>
+          <dxi-column dataField="DevDescription" caption="Phân tích lập trình"></dxi-column>
+          <dxi-column dataField="State" caption="Trạng thái">
+            <dxo-lookup [dataSource]="states" displayExpr="value" valueExpr="id">
+            </dxo-lookup>
+          </dxi-column>
+          <div *dxTemplate=" let data of 'cellTemplate'">
+            <a (click)="selectRequest(data.value, request)">{{data.value}}</a>
+          </div>
+        </dx-data-grid>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #topic let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <form [formGroup]="topicForm">
+      <div class="form-body">
+        <div class="form-group form-group-sm">
+          <label class="control-label">CustomerId</label>
+          <input class="form-control" type="text" formControlName="CustomerId" readonly="readonly">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Name</label>
+          <input class="form-control" type="text" formControlName="Name">
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" (click)="addTopic()"> Create </button>
+    <button class="btn btn-outline-primary" type="button" (click)="d('close')"> Close </button>
+  </div>
+</ng-template>
+
+<ng-template #request let-c="close" let-d="dismiss">
+  <div class="modal-body">
+    <form [formGroup]="requestForm">
+      <div class="form-body">
+        <div *ngIf="editMode" class="form-group form-group-sm">
+          <label class="control-label">Mã yêu cầu</label>
+          <input class="form-control" type="text" formControlName="Code">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Chủ đề</label>
+          <input class="form-control" type="text" formControlName="TopicId" readonly="readonly">
+        </div>
+        <div *ngIf="editMode" class="form-group form-group-sm">
+          <label class="control-label">Ngày tạo yêu cầu</label>
+          <input class="form-control" type="datetime" formControlName="DateCreated">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Thời hạn thiết kế</label>
+          <input class="form-control" formControlName="DesignDateExpired">
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Thời hạn lập trình</label>
+          <input class="form-control" formControlName="CodeDateExpired">
+        </div>
+
+        <div class="form-group form-group-sm">
+          <label class="control-label">Người giao yêu cầu</label>
+          <select class="form-control" formControlName="FromEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Người nhận yêu cầu</label>
+          <select class="form-control" formControlName="ToEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Người thực hiện yêu cầu</label>
+          <select class="form-control" formControlName="DoEmployeeId">
+            <option *ngFor = "let e of employees" [ngValue]="e.Id"> {{e.ShortName}}</option>
+          </select>
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Mô tả yêu cầu</label>
+          <textarea class="form-control" formControlName="Description"> </textarea>
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Mô tả lập trình</label>
+          <textarea class="form-control" formControlName="DevDescription"> </textarea>
+        </div>
+        <div class="form-group form-group-sm">
+          <label class="control-label">Trạng thái</label>
+          <select class="form-control" formControlName="State">
+            <option [value]="0"> Chờ phân tích </option>
+            <option [value]="1"> Chờ phân công</option>
+            <option [value]="2"> Chờ xử lý </option>
+            <option [value]="3"> Chờ kiểm tra </option>
+            <option [value]="4"> Hoàn thành</option>
+          </select>
+          <div class="form-group form-group-sm">
+            <label class="control-label">Chọn file</label>
+            <div class="row">
+              <div class="col-md-6">
+                <input type="file" ng2FileSelect [uploader]="uploader" required placeholder="Chọn file" name="fileInput">
+              </div>
+              <div class="col-md-2 offset-md-3">
+                <button type="button" (click)="uploadFile()"> Upload </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" (click)="send()"> Send</button>
+        <button class="btn btn-outline-primary" type="button" (click)="d('close')"> Close </button>
+      </div>
+    </form>
+  </div>
+</ng-template>
