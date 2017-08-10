@@ -8,15 +8,12 @@ import { BreezeBridgeAngularModule } from 'breeze-bridge-angular';
 import { FileUploadModule } from 'ng2-file-upload/ng2-file-upload';
 import { CommonModule } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { PrimeModule } from './admin/customer/prime.module';
 import { DataModelService } from './admin/data-model.service';
 import { AppComponent } from './app.component';
 import { CustomerComponent } from './admin/customer/customer.component';
 import { routing } from './app.routes';
-import { CustomerDetailComponent } from './admin/customer-detail/customer-detail.component';
 import { DxDataGridModule } from 'devextreme-angular';
 import { CustomerSortPipe } from './admin/customer/customer-sort.pipe';
-import {AccordionModule} from 'primeng/primeng';
 
 
 
@@ -24,7 +21,6 @@ import {AccordionModule} from 'primeng/primeng';
   declarations: [
     AppComponent,
     CustomerComponent,
-    CustomerDetailComponent,
     CustomerSortPipe,
   ],
   imports: [
@@ -39,8 +35,6 @@ import {AccordionModule} from 'primeng/primeng';
     FileUploadModule,
     CommonModule,
     BrowserAnimationsModule,
-    PrimeModule,
-    AccordionModule
   ],
   providers: [DataModelService],
   bootstrap: [AppComponent]

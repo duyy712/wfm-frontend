@@ -26,6 +26,7 @@ export class CustomerComponent implements OnInit {
   customerForm: FormGroup;
   customers: any[];
   customer: any;
+  selectedCustomer: any;
   selection: any;
   modal: any;
   itemControl = new FormControl();
@@ -49,6 +50,9 @@ export class CustomerComponent implements OnInit {
   uploader: any;
   editable: boolean;
   isCompleted: boolean;
+  response: any;
+  responseMessage: string;
+  error: boolean;
   states = [{ id: 0, value: 'Chờ phân tích' }, { id: 1, value: 'Chờ phân công' },
   { id: 2, value: 'Chờ xử lý' }, { id: 3, value: 'Chờ kiểm tra' },
   { id: 4, value: 'Hoàn thành' }]
@@ -59,7 +63,9 @@ export class CustomerComponent implements OnInit {
     private service: DataModelService) { }
 
   ngOnInit() {
-    this.uploader = new FileUploader({ url: 'http://localhost:61028/breeze/datamodel/import' });
+    //  this.uploader = new FileUploader({ url: 'http://localhost:61028/breeze/datamodel/import' });
+    this.uploader = new FileUploader({ url: 'http://192.168.11.32:5555/breeze/datamodel/import' });
+
     this.service.fetchMetadata().then(() => {
       this.service.getFiles().then(data => this.files = data[0]);
 
@@ -85,7 +91,8 @@ export class CustomerComponent implements OnInit {
       });
   }
 
-  open(content, customer) {
+  open(response, content, customer) {
+    this.response = response;
     this.modal = this.ngbModal.open(content);
     if (!customer) {
       this.selection = 1;
@@ -111,35 +118,33 @@ export class CustomerComponent implements OnInit {
         Info: this.customer.Info
       })
     }
+    this.response = response;
+
   }
 
   send() {
     if (this.selection === 1) {
       this.customer = {};
-    }
-    Object.assign(this.customer, this.customerForm.value);
-    if (this.selection === 1) {
+      Object.assign(this.customer, this.customerForm.value);
       this.customer.entityState = 'Added';
       this.service.createCustomer(this.customer);
-    }
-    this.saveChanges().then(res => {
-      if (this.selection === 1) {
+      this.saveChanges().then(res => {
         this.customers.push(res[0]);
-      }
-      this.customers = this.customers.slice()
-      alert('success');
-      this.modal.close();
-    })
-      .catch(error => console.log(error));
-    // } else {
-    //   this.saveChanges().then(() => {
-    //     alert('Edit successfully')
-    //     this.modal.close();
-    //   })
-    //     .catch(error => {
-    //       this.service.rejectChanges();
-
-    //     })
+        this.customers = this.customers.slice();
+        this.ngbModal.open(this.response);
+        this.responseMessage = `Tạo khách hàng mới thành công`;
+        this.modal.close();
+      }).catch(() => this.service.rejectChanges());
+    } else {
+      Object.assign(this.customer, this.customerForm.value);
+      this.saveChanges().then(res => {
+        this.customers = this.customers.slice()
+        this.ngbModal.open(this.response);
+        this.responseMessage = `Sửa thông tin thành công`;
+        this.modal.close();
+      })
+        .catch(() => this.service.rejectChanges());
+    }
   }
 
   search(input) {
@@ -150,43 +155,50 @@ export class CustomerComponent implements OnInit {
     return this.service.saveChanges();
   }
 
-  delete(customer, confirm) {
-    const i = this.customers.indexOf(this.customer);
-    console.log(i)
+  delete(response, customer, confirm) {
+    this.response = response;
     this.customer = customer;
+    console.log(this.customer);
+    const i = this.customers.indexOf(this.customer);
+    console.log(i);
+
     this.ngbModal.open(confirm).result
       .then(() => {
         this.customer.entityAspect.setDeleted();
         this.saveChanges().then(() => {
+          this.ngbModal.open(this.response);
+          this.responseMessage = 'Xóa khách hàng thành công';
           this.customers.splice(i, 1);
+          this.customer = null;
         })
       }).catch(() => this.ngbModal.open(confirm).close());
+
   }
 
   select(element) {
     this.check = true;
-    // this.topics = [];
     this.service.getCustomerByID(element.Id).then(data => this.customer = data[0]);
     this.service.getTopicsByCustomer(element.Id).then(data => this.topics = data);
     this.customerId = element.Id;
   }
 
-  createNew(topic) {
+  createNew(response, topic) {
     this.topic = {};
     this.topicModal = this.ngbModal.open(topic);
     this.topicForm = this.fb.group({
       Name: '',
       CustomerId: this.customerId,
     })
+    this.response = response;
   }
 
   addTopic() {
     Object.assign(this.topic, this.topicForm.value);
-    // console.log(this.topic);
     this.service.createTopic(this.topic);
     this.service.saveChanges().then(entities => {
       this.topics.push(entities[0]);
-      // alert('Topic add successfully');
+      this.ngbModal.open(this.response);
+      this.responseMessage = 'Tạo nội dung mới thành công';
       this.topicModal.close();
     }).catch(error => {
       console.log(error);
@@ -214,7 +226,7 @@ export class CustomerComponent implements OnInit {
     });
   }
 
-  createRequest(request, id) {
+  createRequest(response, request, id) {
     console.log(id);
     this.editMode = false;
     this.request = {};
@@ -231,7 +243,8 @@ export class CustomerComponent implements OnInit {
       ToEmployeeId: '',
       DoEmployeeId: '',
       State: '',
-    })
+    });
+    this.response = response;
   }
 
   uploadFile() {
@@ -264,12 +277,16 @@ export class CustomerComponent implements OnInit {
       this.service.createCustomerRequest(this.request);
     }
     this.service.saveChanges().then(() => {
+      this.ngbModal.open(this.response);
+      this.responseMessage = this.editMode ? 'Cập nhật yêu cầu thành công' : 'Tạo mới yêu cầu thành công';
       this.requestModal.close();
+
       this.dataGrid.instance.refresh();
 
     }).catch(error => {
+      this.error = true;
+      this.ngbModal.open(this.response);
       this.service.rejectChanges();
-      console.log(error.entityErrors)
     });
   }
 

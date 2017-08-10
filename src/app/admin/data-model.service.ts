@@ -10,7 +10,8 @@ import 'rxjs/Rx';
 
 export class DataModelService {
   private entityManager: EntityManager;
-  private apiUrl = 'http://localhost:61028/breeze/datamodel';
+  // private apiUrl = 'http://localhost:61028/breeze/datamodel';
+  private apiUrl = 'http://192.168.11.32:5555/breeze/datamodel/';
   initPromise: Promise<any>;
   store: any;
   properties: any;

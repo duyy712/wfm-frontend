@@ -23,6 +23,8 @@ tr td {
 *:not(h5){
     font-size: 14px;
 }
+pre {font-family: Consolas,monospace}
+
 
 .card-header {
   padding:0;

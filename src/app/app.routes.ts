@@ -1,6 +1,5 @@
-import {CustomerComponent} from './admin/customer/customer.component';
-import {Routes, RouterModule } from '@angular/router';
-import { CustomerDetailComponent } from './admin/customer-detail/customer-detail.component';
+import { CustomerComponent } from './admin/customer/customer.component';
+import { Routes, RouterModule } from '@angular/router';
 
 const routes: Routes = [
     {
@@ -11,10 +10,6 @@ const routes: Routes = [
     {
         path: 'customer',
         component: CustomerComponent
-    },
-    {
-        path: 'customer/detail/:id',
-        component: CustomerDetailComponent
     }
 ]
 
